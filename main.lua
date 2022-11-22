@@ -4,47 +4,85 @@ require("items")
 BOI_VERSION = 1
 MOD_NAME = "The Binding of Stats"
 
-local mod = RegisterMod(MOD_NAME, BOI_VERSION)
+mod = RegisterMod(MOD_NAME, BOI_VERSION)
 mod.need_init = true
+
+function mod:__isPassiveItem(id)
+    local item_config = Isaac.GetItemConfig():GetCollectible(id)
+
+    if item_config.Type == ItemType.ITEM_PASSIVE or
+        item_config.Type == ItemType.ITEM_FAMILIAR then
+        return true
+    end
+
+    return false
+end
 
 function mod:__getPassiveItems()
     collected_items = {}
     for i = ITEM_FIRST_ID, ITEM_LAST_ID do
-        if Isaac.GetPlayer():HasCollectible(i) then
-            if Isaac.GetItemConfig():GetCollectible(i).Type == ItemType.ITEM_PASSIVE then
-                collected_items[#items_table + 1] = getItemNameById(i)
-            end
+        if Isaac.GetPlayer():HasCollectible(i) and mod:__isPassiveItem(i) then
+            collected_items[#collected_items + 1] = getItemNameById(i)
         end
     end
 
     return collected_items
 end
 
--- This needs improvement
---[[
 function mod:__getCurrentHP()
-    hearts_table = {}
-    red_heart_container_count = Isaac.GetPlayer():GetMaxHearts() / 2 
-    red_heart_container_count -= Isaac.GetPlayer():GetBoneHearts()
-    red_hp_count = Isaac.GetPlayer():GetHearts
+    hp_str = ""
+    local player = Isaac.GetPlayer()
 
-    -- Count the red heart containers
-    for i = 1, red_heart_container_count do
-        if red_hp_count > 1 then
-            hearts_table[i] = {"red", "full"}
-            red_hp_count -= 2
-        elseif red_hp_count == 1 then
-            hearts_table[i] = {"red", "half"}
-            red_hp_count -= 1
+    local red_containers = player:GetMaxHearts() / 2
+    local red_hp = player:GetHearts()
+
+    while red_containers > 0 do
+        hp_str = hp_str .. "R"
+
+        if red_hp > 1 then
+            hp_str = hp_str .. "f"
+            red_hp = red_hp - 2
+        elseif red_hp == 1 then
+            hp_str = hp_str .. "h"
+            red_hp = 0
         else
-            hearts_table[i] = {"red", "empty"}
+            hp_str = hp_str .. "e"
         end
 
-        
-
+        red_containers = red_containers - 1
     end
+
+    local IS_BLACK = 0x1
+
+    local s_b_hearts = player:GetSoulHearts() / 2
+    local bone_hearts = player:GetBoneHearts()
+    local s_b_mask = player:GetBlackHearts()
+    local total_hearts = s_b_hearts + bone_hearts
+    for i = 0, total_hearts-1 do
+        if player:IsBoneHeart(i) then
+            hp_str = hp_str .. "O"
+
+            if red_hp > 1 then
+                hp_str = hp_str .. "f"
+                red_hp = red_hp - 2
+            elseif red_hp == 1 then
+                hp_str = hp_str .. "h"
+                red_hp = 0
+            else
+                hp_str = hp_str .. "e"
+            end
+
+        elseif IS_BLACK & s_b_mask ~= 0 then
+            hp_str = hp_str .. "B"
+            s_b_mask = s_b_mask >> 1
+        else
+            hp_str = hp_str .. "S"
+            s_b_mask = s_b_mask >> 1
+        end
+    end
+
+    return hp_str
 end
---]]
 
 function mod:onGameStarted(isContinued)
     if self.need_init then
@@ -52,13 +90,13 @@ function mod:onGameStarted(isContinued)
         self.need_init = false
     end
 
-    -- New run
     if not isContinued then
         local seed = Game():GetSeeds():GetStartSeedString()
---        local hp = mod:__getCurrentHP()
+        local char = Isaac.GetPlayer():GetName()
+        local hp = mod:__getCurrentHP()
         local a_item = getItemNameById(Isaac.GetPlayer():GetActiveItem())
         local p_items = mod:__getPassiveItems()
-        self.store[#self.store + 1] = {seed, a_item, p_items}
+        self.store[#self.store + 1] = {seed, char, hp, a_item, p_items}
     end
 end
 
@@ -82,5 +120,5 @@ end
 
 mod:AddCallback(ModCallbacks.MC_POST_GAME_STARTED, mod.onGameStarted)
 mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, mod.onGameExit)
---mod:AddCallback(ModCallbacks.MC_POST_RENDER, mod.onRender)
+mod:AddCallback(ModCallbacks.MC_POST_RENDER, mod.onRender)
 

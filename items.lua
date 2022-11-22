@@ -1,12 +1,12 @@
-ITEM_FIRST_ID = 0
+ITEM_FIRST_ID = 1
 ITEM_LAST_ID = 732
 
 -- Table with all the items: id, name
 local __ITEM_ID = 1
 local __ITEM_NAME = 2
 items = {
-    {FIRST_ID, "NULL"},
-    {1, "SAD_ONION"},
+    {0, "NULL"},
+    {FIRST_ID, "SAD_ONION"},
     {2, "INNER_EYE"},
     {3, "SPOON_BENDER"},
     {4, "CRICKETS_HEAD"},
