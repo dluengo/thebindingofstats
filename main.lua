@@ -79,7 +79,7 @@ end
 --   RfRfRfSBOhBOe: 3 full red hearts, 1 soul heart, 1 black heart, 1 bone heart
 --                  half-filled, 1 black heart and 1 bone heart empty.
 --
--- TODO: Still no support for eternal, rotten, golden hearts or other sorts of HP
+-- TODO: Still no support for eternal, rotten, golden hearts or other sort of HP
 -- like coins (the keeper) on no HP (the lost).
 function mod:__getCurrentHP()
     hp_str = ""
@@ -148,8 +148,13 @@ function mod:initMod()
     if mod:HasData() then
         self.store = json.decode(mod:LoadData())
     else
-        self.store = {{"Seed", "Character", "HP", "Active Item", "Passive Items"}}
+        self.store = {{"Seed", "Character", "HP", "Speed", "Damage", "Tears", "Active Item", "Passive Items"}}
     end
+end
+
+-- This is how the game calculates the tear fire rate.
+function mod:__computeTearDelay(trs)
+    return 30 / (trs + 1)
 end
 
 -- Called when a game starts or is continued.
@@ -162,12 +167,17 @@ function mod:onGameStarted(isContinued)
 
     -- We are just interested on saving the statistics at the start of a game.
     if not isContinued then
+        local player = Isaac.GetPlayer()
         local seed = Game():GetSeeds():GetStartSeedString()
-        local char = Isaac.GetPlayer():GetName()
+        local char = player:GetName()
         local hp = mod:__getCurrentHP()
-        local a_item = getItemNameById(Isaac.GetPlayer():GetActiveItem())
+        local spd = string.format("%.2f", player.MoveSpeed)
+        local dmg = string.format("%.2f", player.Damage)
+        local trs = string.format("%.2f", mod:__computeTearDelay(player.MaxFireDelay))
+        local a_item = getItemNameById(player:GetActiveItem())
         local p_items = mod:__getPassiveItems()
-        self.store[#self.store + 1] = {seed, char, hp, a_item, p_items}
+
+        self.store[#self.store + 1] = {seed, char, hp, spd, dmg, trs, a_item, p_items}
     end
 end
 
