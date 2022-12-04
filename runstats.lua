@@ -1,5 +1,5 @@
 require("table_to_string")
-local items = require("items")
+require("items")
 
 RUNSTATS_HEADER = {
     "Seed",
@@ -28,7 +28,7 @@ RunStats = {
     init_damage = 0,
     init_tears = 0,
     init_luck = 0,
-    init_items = {},
+    init_passive_items = {},
     init_active_item = "",
     init_trinket = "",
     coins = 0,
@@ -56,9 +56,9 @@ function RunStats:GetStatsFromGame(game)
     self.init_damage = string.format("%.2f", player.Damage)
     self.init_tears = string.format("%.2f", self:__computeTears(player.MaxFireDelay))
     self.init_luck = string.format("%.2f", player.Luck)
-    self.init_items = self:__computeItems(game)
-    self.init_active_item = player:GetActiveItem()
-    self.init_trinket = player:GetTrinket(0)
+    self.init_passive_items = self:__computePassiveItems(player)
+    self.init_active_item = Items:GetItemNameById(player:GetActiveItem())
+    self.init_trinket = Trinkets:GetTrinketNameById(player:GetTrinket(0))
     self.coins = player:GetNumCoins()
     self.bombs = player:GetNumBombs()
     self.keys = player:GetNumKeys()
@@ -89,7 +89,7 @@ function RunStats:GetRunValuesAsTable()
         self.init_damage,
         self.init_tears,
         self.init_luck,
-        self.init_items,
+        self.init_passive_items,
         self.init_active_item,
         self.init_trinket,
         self.coins,
@@ -210,39 +210,17 @@ function RunStats:__computeTears(tears)
     return 30 / (tears + 1)
 end
 
-function RunStats:__computeItems(game)
-    return {}
-end
-
--- Creates and return a table with the collected passive items of the first
--- character. The table contain strings with the names of the items. Check file
--- items.lua to know more.
-function RunStats:__getPassiveItems(player)
+-- Creates and return a table with the collected passive items of the character.
+-- The table contain strings with the names of the items.
+function RunStats:__computePassiveItems(player)
     local collected_items = {}
 
-    for i = ITEM_FIRST_ID, ITEM_LAST_ID do
-        if player:HasCollectible(i) and RunStats:__isPassiveItem(i) then
-            collected_items[#collected_items + 1] = getItemNameById(i)
+    for i = 0, CollectibleType.NUM_COLLECTIBLES - 1 do
+        if player:HasCollectible(i, true) and Items:IsPassiveItem(i) then
+            collected_items[#collected_items + 1] = Items:GetItemNameById(i)
         end
     end
 
     return collected_items
-end
-
--- Determines whether an item, given by its id, is passive or not.
-function RunStats:__isPassiveItem(id)
-
-    -- Accessing the Isaac symbol here is horrible, a lot of coupling.
-    local item_config = Isaac.GetItemConfig():GetCollectible(id)
-
-    -- For some reason there is a separate type for familiars (i.e. cube of
-    -- meat, brother bobby, dark bum...). So we need to check if the item is
-    -- passive or a familiar.
-    if item_config.Type == ItemType.ITEM_PASSIVE or
-        item_config.Type == ItemType.ITEM_FAMILIAR then
-        return true
-    end
-
-    return false
 end
 

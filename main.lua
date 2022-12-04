@@ -8,7 +8,7 @@ local data = nil
 function initMod(mod)
 end
 
-function onGameStarts(isContinue)
+function onGameStarts(_, isContinued)
     -- For some reason trying to load the data in initMod() results in function
     -- mod:HasData() returning false, so as a workaround we do this here.
     if data == nil then
@@ -19,10 +19,12 @@ function onGameStarts(isContinue)
         end
     end
 
-    local rs = RunStats:new()
-    rs:GetStatsFromGame(Game())
+    if not isContinued then
+        local rs = RunStats:new()
+        rs:GetStatsFromGame(Game())
 
-    data[#data+1] = rs:GetRunValuesAsTable()
+        data[#data+1] = rs:GetRunValuesAsTable()
+    end
 end
 
 function onGameExists()

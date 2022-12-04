@@ -1,12 +1,16 @@
-ITEM_FIRST_ID = 1
-ITEM_LAST_ID = 732
+-- This file is pretty much a copy of the CollectibleType and TrinketType.
+-- The game's API looks clunky to me (maybe I don't fully understand it) so I
+-- implemented some functionality regarding items here.
 
 -- Table with all the items: id, name
-local __ITEM_ID = 1
-local __ITEM_NAME = 2
-items = {
+local __ID = 1
+local __NAME = 2
+
+-- In the future, if new items are added, this will need to be updated
+-- accordingly.
+Items = {
     {0, "NULL"},
-    {FIRST_ID, "SAD_ONION"},
+    {1, "SAD_ONION"},
     {2, "INNER_EYE"},
     {3, "SPOON_BENDER"},
     {4, "CRICKETS_HEAD"},
@@ -730,19 +734,252 @@ items = {
     {729, "DECAP_ATTACK"},
     {730, "GLASS_EYE"},
     {731, "STYE"},
-    {LAST_ID, "MOMS_RING"}
+    {732, "MOMS_RING"},
+    {733, "NUM_COLLECTIBLES"}
 }
 
 -- Linear search, easy to code but inefficient
-function getItemNameById(id)
-    local i = 1
-    while i <= #items do
-        item = items[i]
-        if item[__ITEM_ID] == id then
-            return item[__ITEM_NAME]
-        end
+function Items:GetItemNameById(id)
+    if id > 0 and id < CollectibleType.NUM_COLLECTIBLES then
 
-        i = i + 1
+        local i = 1
+        while i <= CollectibleType.NUM_COLLECTIBLES do
+
+            local item = Items[i]
+            if item[__ID] == id then
+                return item[__NAME]
+            end
+    
+            i = i + 1
+        end
+    end
+
+    return ""
+end
+
+-- Determines whether an item, given by its id, is passive or not.
+function Items:IsPassiveItem(id)
+    local item_config = Isaac.GetItemConfig():GetCollectible(id)
+
+    -- For some reason there is a separate type for familiars (i.e. cube of
+    -- meat, brother bobby, dark bum...). So we need to check if the item is
+    -- passive or a familiar.
+    if item_config.Type == ItemType.ITEM_PASSIVE or
+        item_config.Type == ItemType.ITEM_FAMILIAR then
+        return true
+    end
+
+    return false
+end
+
+Trinkets = {
+    {0, "NULL"},
+    {1, "SWALLOWED_PENNY"},
+    {2, "PETRIFIED_POOP"},
+    {3, "AAA_BATTERY"},
+    {4, "BROKEN_REMOTE"},
+    {5, "PURPLE_HEART"},
+    {6, "BROKEN_MAGNET"},
+    {7, "ROSARY_BEAD"},
+    {8, "CARTRIDGE"},
+    {9, "PULSE_WORM"},
+    {10, "WIGGLE_WORM"},
+    {11, "RING_WORM"},
+    {12, "FLAT_WORM"},
+    {13, "STORE_CREDIT"},
+    {14, "CALLUS"},
+    {15, "LUCKY_ROCK"},
+    {16, "MOMS_TOENAIL"},
+    {17, "BLACK_LIPSTICK"},
+    {18, "BIBLE_TRACT"},
+    {19, "PAPER_CLIP"},
+    {20, "MONKEY_PAW"},
+    {21, "MYSTERIOUS_PAPER"},
+    {22, "DAEMONS_TAIL"},
+    {23, "MISSING_POSTER"},
+    {24, "BUTT_PENNY"},
+    {25, "MYSTERIOUS_CANDY"},
+    {26, "HOOK_WORM"},
+    {27, "WHIP_WORM"},
+    {28, "BROKEN_ANKH"},
+    {29, "FISH_HEAD"},
+    {30, "PINKY_EYE"},
+    {31, "PUSH_PIN"},
+    {32, "LIBERTY_CAP"},
+    {33, "UMBILICAL_CORD"},
+    {34, "CHILDS_HEART"},
+    {35, "CURVED_HORN"},
+    {36, "RUSTED_KEY"},
+    {37, "GOAT_HOOF"},
+    {38, "MOMS_PEARL"},
+    {39, "CANCER"},
+    {40, "RED_PATCH"},
+    {41, "MATCH_STICK"},
+    {42, "LUCKY_TOE"},
+    {43, "CURSED_SKULL"},
+    {44, "SAFETY_CAP"},
+    {45, "ACE_SPADES"},
+    {46, "ISAACS_FORK"},
+    {47, "POLAROID_OBSOLETE"},
+    {48, "MISSING_PAGE"},
+    {49, "BLOODY_PENNY"},
+    {50, "BURNT_PENNY"},
+    {51, "FLAT_PENNY"},
+    {52, "COUNTERFEIT_PENNY"},
+    {53, "TICK"},
+    {54, "ISAACS_HEAD"},
+    {55, "MAGGYS_FAITH"},
+    {56, "JUDAS_TONGUE"},
+    {57, "SOUL"},
+    {58, "SAMSONS_LOCK"},
+    {59, "CAINS_EYE"},
+    {60, "EVES_BIRD_FOOT"},
+    {61, "LEFT_HAND"},
+    {62, "SHINY_ROCK"},
+    {63, "SAFETY_SCISSORS"},
+    {64, "RAINBOW_WORM"},
+    {65, "TAPE_WORM"},
+    {66, "LAZY_WORM"},
+    {67, "CRACKED_DICE"},
+    {68, "SUPER_MAGNET"},
+    {69, "FADED_POLAROID"},
+    {70, "LOUSE"},
+    {71, "BOBS_BLADDER"},
+    {72, "WATCH_BATTERY"},
+    {73, "BLASTING_CAP"},
+    {74, "STUD_FINDER"},
+    {75, "ERROR"},
+    {76, "POKER_CHIP"},
+    {77, "BLISTER"},
+    {78, "SECOND_HAND"},
+    {79, "ENDLESS_NAMELESS"},
+    {80, "BLACK_FEATHER"},
+    {81, "BLIND_RAGE"},
+    {82, "GOLDEN_HORSE_SHOE"},
+    {83, "STORE_KEY"},
+    {84, "RIB_OF_GREED"},
+    {85, "KARMA"},
+    {86, "LIL_LARVA"},
+    {87, "MOMS_LOCKET"},
+    {88, "NO"},
+    {89, "CHILD_LEASH"},
+    {90, "BROWN_CAP"},
+    {91, "MECONIUM"},
+    {92, "CRACKED_CROWN"},
+    {93, "USED_DIAPER"},
+    {94, "FISH_TAIL"},
+    {95, "BLACK_TOOTH"},
+    {96, "OUROBOROS_WORM"},
+    {97, "TONSIL"},
+    {98, "NOSE_GOBLIN"},
+    {99, "SUPER_BALL"},
+    {100, "VIBRANT_BULB"},
+    {101, "DIM_BULB"},
+    {102, "FRAGMENTED_CARD"},
+    {103, "EQUALITY"},
+    {104, "WISH_BONE"},
+    {105, "BAG_LUNCH"},
+    {106, "LOST_CORK"},
+    {107, "CROW_HEART"},
+    {108, "WALNUT"},
+    {109, "DUCT_TAPE"},
+    {110, "SILVER_DOLLAR"},
+    {111, "BLOODY_CROWN"},
+    {112, "PAY_TO_WIN"},
+    {113, "LOCUST_OF_WRATH"},
+    {114, "LOCUST_OF_PESTILENCE"},
+    {115, "LOCUST_OF_FAMINE"},
+    {116, "LOCUST_OF_DEATH"},
+    {117, "LOCUST_OF_CONQUEST"},
+    {118, "BAT_WING"},
+    {119, "STEM_CELL"},
+    {120, "HAIRPIN"},
+    {121, "WOODEN_CROSS"},
+    {122, "BUTTER"},
+    {123, "FILIGREE_FEATHERS"},
+    {124, "DOOR_STOP"},
+    {125, "EXTENSION_CORD"},
+    {126, "ROTTEN_PENNY"},
+    {127, "BABY_BENDER"},
+    {128, "FINGER_BONE"},
+    {129, "JAW_BREAKER"},
+    {130, "CHEWED_PEN"},
+    {131, "BLESSED_PENNY"},
+    {132, "BROKEN_SYRINGE"},
+    {133, "SHORT_FUSE"},
+    {134, "GIGANTE_BEAN"},
+    {135, "LIGHTER"},
+    {136, "BROKEN_PADLOCK"},
+    {137, "MYOSOTIS"},
+    {138, "M"},
+    {139, "TEARDROP_CHARM"},
+    {140, "APPLE_OF_SODOM"},
+    {141, "FORGOTTEN_LULLABY"},
+    {142, "BETHS_FAITH"},
+    {143, "OLD_CAPACITOR"},
+    {144, "BRAIN_WORM"},
+    {145, "PERFECTION"},
+    {146, "DEVILS_CROWN"},
+    {147, "CHARGED_PENNY"},
+    {148, "FRIENDSHIP_NECKLACE"},
+    {149, "PANIC_BUTTON"},
+    {150, "BLUE_KEY"},
+    {151, "FLAT_FILE"},
+    {152, "TELESCOPE_LENS"},
+    {153, "MOMS_LOCK"},
+    {154, "DICE_BAG"},
+    {155, "HOLY_CROWN"},
+    {156, "MOTHERS_KISS"},
+    {157, "TORN_CARD"},
+    {158, "TORN_POCKET"},
+    {159, "GILDED_KEY"},
+    {160, "LUCKY_SACK"},
+    {161, "WICKED_CROWN"},
+    {162, "AZAZELS_STUMP"},
+    {163, "DINGLE_BERRY"},
+    {164, "RING_CAP"},
+    {165, "NUH_UH"},
+    {166, "MODELING_CLAY"},
+    {167, "POLISHED_BONE"},
+    {168, "HOLLOW_HEART"},
+    {169, "KIDS_DRAWING"},
+    {170, "CRYSTAL_KEY"},
+    {171, "KEEPERS_BARGAIN"},
+    {172, "CURSED_PENNY"},
+    {173, "YOUR_SOUL"},
+    {174, "NUMBER_MAGNET"},
+    {175, "STRANGE_KEY"},
+    {176, "LIL_CLOT"},
+    {177, "TEMPORARY_TATTOO"},
+    {178, "SWALLOWED_M"},
+    {179, "RC_REMOTE"},
+    {180, "FOUND_SOUL"},
+    {181, "EXPANSION_PACK"},
+    {182, "BETHS_ESSENCE"},
+    {183, "THE_TWINS"},
+    {184, "ADOPTION_PAPERS"},
+    {185, "CRICKET_LEG"},
+    {186, "APOLLYONS_BEST_FRIEND"},
+    {187, "BROKEN_GLASSES"},
+    {188, "ICE_CUBE"},
+    {189, "SIGIL_OF_BAPHOMET"},
+    {190, "NUM_TRINKETS"}
+}
+
+-- Linear search, easy to code but inefficient
+function Trinkets:GetTrinketNameById(id)
+    if id > 0 and id < TrinketType.NUM_TRINKETS then
+
+        local i = 1
+        while i <= TrinketType.NUM_TRINKETS do
+
+            local trinket = Trinkets[i]
+            if trinket[__ID] == id then
+                return trinket[__NAME]
+            end
+    
+            i = i + 1
+        end
     end
 
     return ""
